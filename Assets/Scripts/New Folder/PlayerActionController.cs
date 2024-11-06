@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -7,6 +7,8 @@ public class PlayerActionController : NetworkBehaviour
 {
     public float speed;
     private Vector2 move;
+    private NetworkVariable<Vector3> networkedPosition = new NetworkVariable<Vector3>(
+        writePerm: NetworkVariableWritePermission.Owner);
 
     private Camera _mainCamera;
 
@@ -22,9 +24,21 @@ public class PlayerActionController : NetworkBehaviour
         Initialize();
     }
 
+    private void Update()
+    {
+        if (IsOwner)
+        {
+            networkedPosition.Value = transform.position;
+        }
+        else
+        {
+            transform.position = Vector3.Lerp(transform.position, networkedPosition.Value, Time.deltaTime * 10f);
+        }
+    }
+
     void FixedUpdate()
     {
-        //if (Application.isFocused) return;
+
         if (!IsOwner) return; 
         MovePlayer();
     }
